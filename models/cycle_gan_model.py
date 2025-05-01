@@ -3,6 +3,21 @@ import itertools
 from util.image_pool import ImagePool
 from .base_model import BaseModel
 from . import networks
+from torchsummary import summary
+
+from cleanfid import fid
+import cv2
+import numpy as np
+import torchvision
+from torchvision.utils import save_image
+import matplotlib.pyplot as plt
+import os
+from options.test_options import TestOptions
+from data import create_dataset
+from models import create_model
+from util.visualizer import save_images
+from util import html
+import wandb
 
 
 class CycleGANModel(BaseModel):
@@ -62,19 +77,38 @@ class CycleGANModel(BaseModel):
 
         self.visual_names = visual_names_A + visual_names_B  # combine visualizations for A and B
         # specify the models you want to save to the disk. The training/test scripts will call <BaseModel.save_networks> and <BaseModel.load_networks>.
-        if self.isTrain:
+        '''if self.isTrain:
             self.model_names = ['G_A', 'G_B', 'D_A', 'D_B']
         else:  # during test time, only load Gs
-            self.model_names = ['G_A', 'G_B']
+            self.model_names = ['G_A', 'G_B']'''
 
+        if self.isTrain:
+            self.model_names = ['G_', 'D_A', 'D_B']
+        else:  # during test time, only load Gs
+            self.model_names = ['G_']
         # define networks (both Generators and discriminators)
         # The naming is different from those used in the paper.
         # Code (vs. paper): G_A (G), G_B (F), D_A (D_Y), D_B (D_X)
-        self.netG_A = networks.define_G(opt.input_nc, opt.output_nc, opt.ngf, opt.netG, opt.norm,
+        self.netG_ = networks.define_G(opt.input_nc, opt.output_nc, opt.ngf, opt.netG, opt.norm,
                                         not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids)
-        self.netG_B = networks.define_G(opt.output_nc, opt.input_nc, opt.ngf, opt.netG, opt.norm,
-                                        not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids)
-
+        
+        from prettytable import PrettyTable
+        def count_parameters(model):
+            table = PrettyTable(["Modules", "Parameters"])
+            total_params = 0
+            for name, parameter in model.named_parameters():
+                if not parameter.requires_grad: continue
+                params = parameter.numel()
+                table.add_row([name, params])
+                total_params+=params
+            print(table)
+            print(f"Total Trainable Params: {total_params}")
+            return total_params
+    
+        count_parameters(self.netG_)
+        
+        #summary(self.netG_, [(3, 256, 256),(3, 256, 256)])
+        print(self.netG_)
         if self.isTrain:  # define discriminators
             self.netD_A = networks.define_D(opt.output_nc, opt.ndf, opt.netD,
                                             opt.n_layers_D, opt.norm, opt.init_type, opt.init_gain, self.gpu_ids)
@@ -91,7 +125,7 @@ class CycleGANModel(BaseModel):
             self.criterionCycle = torch.nn.L1Loss()
             self.criterionIdt = torch.nn.L1Loss()
             # initialize optimizers; schedulers will be automatically created by function <BaseModel.setup>.
-            self.optimizer_G = torch.optim.Adam(itertools.chain(self.netG_A.parameters(), self.netG_B.parameters()), lr=opt.lr, betas=(opt.beta1, 0.999))
+            self.optimizer_G = torch.optim.Adam(itertools.chain(self.netG_.parameters()), lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizer_D = torch.optim.Adam(itertools.chain(self.netD_A.parameters(), self.netD_B.parameters()), lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizers.append(self.optimizer_G)
             self.optimizers.append(self.optimizer_D)
@@ -111,10 +145,9 @@ class CycleGANModel(BaseModel):
 
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
-        self.fake_B = self.netG_A(self.real_A)  # G_A(A)
-        self.rec_A = self.netG_B(self.fake_B)   # G_B(G_A(A))
-        self.fake_A = self.netG_B(self.real_B)  # G_B(B)
-        self.rec_B = self.netG_A(self.fake_A)   # G_A(G_B(B))
+        #####################################################################
+        self.fake_B, self.fake_A, self.content = self.netG_(self.real_A, self.real_B)
+        self.rec_B, self.rec_A, _ = self.netG_(self.fake_A, self.fake_B)
 
     def backward_D_basic(self, netD, real, fake):
         """Calculate GAN loss for the discriminator
@@ -156,10 +189,11 @@ class CycleGANModel(BaseModel):
         # Identity loss
         if lambda_idt > 0:
             # G_A should be identity if real_B is fed: ||G_A(B) - B||
-            self.idt_A = self.netG_A(self.real_B)
-            self.loss_idt_A = self.criterionIdt(self.idt_A, self.real_B) * lambda_B * lambda_idt
             # G_B should be identity if real_A is fed: ||G_B(A) - A||
-            self.idt_B = self.netG_B(self.real_A)
+            #self.idt_A = self.netG_A(self.real_B)
+            #self.idt_B = self.netG_B(self.real_A)
+            self.idt_A, self.idt_B, _ = self.netG_(self.real_B, self.real_A)
+            self.loss_idt_A = self.criterionIdt(self.idt_A, self.real_B) * lambda_B * lambda_idt
             self.loss_idt_B = self.criterionIdt(self.idt_B, self.real_A) * lambda_A * lambda_idt
         else:
             self.loss_idt_A = 0
@@ -174,7 +208,7 @@ class CycleGANModel(BaseModel):
         # Backward cycle loss || G_A(G_B(B)) - B||
         self.loss_cycle_B = self.criterionCycle(self.rec_B, self.real_B) * lambda_B
         # combined loss and calculate gradients
-        self.loss_G = self.loss_G_A + self.loss_G_B + self.loss_cycle_A + self.loss_cycle_B + self.loss_idt_A + self.loss_idt_B
+        self.loss_G = self.loss_G_A + self.loss_G_B + self.loss_cycle_A + self.loss_cycle_B + self.loss_idt_A + self.loss_idt_B + self.content
         self.loss_G.backward()
 
     def optimize_parameters(self):
@@ -192,3 +226,25 @@ class CycleGANModel(BaseModel):
         self.backward_D_A()      # calculate gradients for D_A
         self.backward_D_B()      # calculate graidents for D_B
         self.optimizer_D.step()  # update D_A and D_B's weights
+
+    def evaluation(self,opt):
+        self.netG_.eval()
+        for i in range(1000): #test A
+            path = 'test/testA/' + str(i+1) + '.jpg'
+            img1 = torchvision.io.read_image(path).float().cuda().unsqueeze(0)
+            img, _,_ = self.netG_(img1, img1)
+            
+            pathh = 'test/testresultA/' + str(i+1) + '.jpg' 
+            #print(pathh)
+            save_image(img, pathh)
+  
+        for i in range(100000): #tset B
+            path = 'test/testB/' + str(i+1) + '.jpg'
+            img1 = torchvision.io.read_image(path).float().cuda().unsqueeze(0)
+            _, img,_ = self.netG_(img1, img1)
+            pathh = 'test/testresultB/' + str(i+1) + '.jpg'
+            #print(pathh)
+            save_image(img, pathh)
+        score1 = fid.compute_fid('test/testA/', 'test/testresultB/')
+        score2 = fid.compute_fid('test/testB', 'test/testresultA/')
+        return score1, score2

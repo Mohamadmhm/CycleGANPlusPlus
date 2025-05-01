@@ -331,6 +331,7 @@ class ResnetGenerator(nn.Module):
             n_blocks (int)      -- the number of ResNet blocks
             padding_type (str)  -- the name of padding layer in conv layers: reflect | replicate | zero
         """
+
         assert(n_blocks >= 0)
         super(ResnetGenerator, self).__init__()
         if type(norm_layer) == functools.partial:
@@ -338,7 +339,75 @@ class ResnetGenerator(nn.Module):
         else:
             use_bias = norm_layer == nn.InstanceNorm2d
 
-        model = [nn.ReflectionPad2d(3),
+        
+        #start
+        self.refpad0 = nn.ReflectionPad2d(3)
+        self.conv0 = nn.Conv2d(input_nc, ngf, kernel_size=7, padding=0, bias=use_bias)
+        self.normlayer0 = norm_layer(ngf)
+        self.relu0 = nn.ReLU(True)
+        
+        #downsample
+        mult = 1
+        self.downconv1 = nn.Conv2d(ngf * mult, ngf * mult * 2, kernel_size=3, stride=2, padding=1, bias=use_bias)
+        self.downnorm1 = norm_layer(ngf * mult * 2)
+        self.downrelu1 = nn.ReLU(True)
+        mult = 2
+        self.downconv2 = nn.Conv2d(ngf * mult, ngf * mult * 2, kernel_size=3, stride=2, padding=1, bias=use_bias)
+        self.downnorm2 = norm_layer(ngf * mult * 2)
+        self.downrelu2 = nn.ReLU(True)
+        
+        #resblock
+        mult = 4
+        self.res1 = ResnetBlock(ngf * mult, padding_type=padding_type, norm_layer=norm_layer, use_dropout=use_dropout, use_bias=use_bias)
+        self.res2 = ResnetBlock(ngf * mult, padding_type=padding_type, norm_layer=norm_layer, use_dropout=use_dropout, use_bias=use_bias)
+        self.res3 = ResnetBlock(ngf * mult, padding_type=padding_type, norm_layer=norm_layer, use_dropout=use_dropout, use_bias=use_bias)
+        self.res4 = ResnetBlock(ngf * mult, padding_type=padding_type, norm_layer=norm_layer, use_dropout=use_dropout, use_bias=use_bias)
+        self.res5 = ResnetBlock(ngf * mult, padding_type=padding_type, norm_layer=norm_layer, use_dropout=use_dropout, use_bias=use_bias)
+        self.res6 = ResnetBlock(ngf * mult, padding_type=padding_type, norm_layer=norm_layer, use_dropout=use_dropout, use_bias=use_bias)
+        self.res7 = ResnetBlock(ngf * mult, padding_type=padding_type, norm_layer=norm_layer, use_dropout=use_dropout, use_bias=use_bias)
+        self.res8 = ResnetBlock(ngf * mult, padding_type=padding_type, norm_layer=norm_layer, use_dropout=use_dropout, use_bias=use_bias)
+        self.res9 = ResnetBlock(ngf * mult, padding_type=padding_type, norm_layer=norm_layer, use_dropout=use_dropout, use_bias=use_bias)
+        
+        # content
+
+        self.l2 = nn.MSELoss()
+        self.avgx = nn.AdaptiveAvgPool2d((1,1))
+        self.avgy = nn.AdaptiveAvgPool2d((1,1))
+        
+
+
+        #upsample1
+        mult = 4
+        self.upconv11 = nn.ConvTranspose2d(ngf * mult, int(ngf * mult / 2), kernel_size=3, stride=2,padding=1, output_padding=1, bias=use_bias)
+        self.upnorm11 = norm_layer(int(ngf * mult / 2))
+        self.uprelu11 = nn.ReLU(True)
+        mult = 2
+        self.upconv21 = nn.ConvTranspose2d(ngf * mult, int(ngf * mult / 2), kernel_size=3, stride=2,padding=1, output_padding=1, bias=use_bias)
+        self.upnorm21 = norm_layer(int(ngf * mult / 2))
+        self.uprelu21 = nn.ReLU(True)
+        
+        #end1
+        self.refpad11 = nn.ReflectionPad2d(3)
+        self.conv11 = nn.Conv2d(ngf, output_nc, kernel_size=7, padding=0)
+        self.tanh11 = nn.Tanh()
+
+        #upsample2
+        mult = 4
+        self.upconv12 = nn.ConvTranspose2d(ngf * mult, int(ngf * mult / 2), kernel_size=3, stride=2,padding=1, output_padding=1, bias=use_bias)
+        self.upnorm12 = norm_layer(int(ngf * mult / 2))
+        self.uprelu12 = nn.ReLU(True)
+        mult = 2
+        self.upconv22 = nn.ConvTranspose2d(ngf * mult, int(ngf * mult / 2), kernel_size=3, stride=2,padding=1, output_padding=1, bias=use_bias)
+        self.upnorm22 = norm_layer(int(ngf * mult / 2))
+        self.uprelu22 = nn.ReLU(True)
+        
+        #end2
+        self.refpad12 = nn.ReflectionPad2d(3)
+        self.conv12 = nn.Conv2d(ngf, output_nc, kernel_size=7, padding=0)
+        self.tanh12 = nn.Tanh()
+
+
+        '''model = [nn.ReflectionPad2d(3),
                  nn.Conv2d(input_nc, ngf, kernel_size=7, padding=0, bias=use_bias),
                  norm_layer(ngf),
                  nn.ReLU(True)]
@@ -367,11 +436,44 @@ class ResnetGenerator(nn.Module):
         model += [nn.Conv2d(ngf, output_nc, kernel_size=7, padding=0)]
         model += [nn.Tanh()]
 
-        self.model = nn.Sequential(*model)
+        self.model = nn.Sequential(*model)'''
 
-    def forward(self, input):
-        """Standard forward"""
-        return self.model(input)
+    def forward(self, x, y):
+        x1 = self.relu0(self.normlayer0(self.conv0(self.refpad0(x))))
+        x2 = self.downrelu1(self.downnorm1(self.downconv1(x1)))
+        x3 = self.downrelu2(self.downnorm2(self.downconv2(x2)))
+        x4 = self.res1(x3)
+        x5 = self.res2(x4)
+        x6 = self.res3(x5)
+        x7 = self.res4(x6)
+        x8 = self.res5(x7)
+        x9 = self.res6(x8)
+        x10 = self.res7(x9)
+        x11 = self.res8(x10)
+        x12 = self.res9(x11)
+        x0 = self.uprelu11(self.upnorm11(self.upconv11(x12)))
+        x0 = self.uprelu21(self.upnorm21(self.upconv21(x0)))
+        x0 = self.tanh11(self.conv11(self.refpad11(x0)))
+
+        y1 = self.relu0(self.normlayer0(self.conv0(self.refpad0(y))))
+        y2 = self.downrelu1(self.downnorm1(self.downconv1(y1)))
+        y3 = self.downrelu2(self.downnorm2(self.downconv2(y2)))
+        y4 = self.res1(y3)
+        y5 = self.res2(y4)
+        y6 = self.res3(y5)
+        y7 = self.res4(y6)
+        y8 = self.res5(y7)
+        y9 = self.res6(y8)
+        y10 = self.res7(y9)
+        y11 = self.res8(y10)
+        y12 = self.res9(y11)
+        y0 = self.uprelu12(self.upnorm12(self.upconv12(y12)))
+        y0 = self.uprelu22(self.upnorm22(self.upconv22(y0)))
+        y0 = self.tanh12(self.conv12(self.refpad12(y0)))
+
+        
+
+        return x0, y0, self.l2(self.avgx(x12), self.avgy(y12))
 
 
 class ResnetBlock(nn.Module):
