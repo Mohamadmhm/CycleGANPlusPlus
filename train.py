@@ -15,8 +15,8 @@ Example:
         python train.py --dataroot ./datasets/facades --name facades_pix2pix --model pix2pix --direction BtoA
 
 See options/base_options.py and options/train_options.py for more training options.
-See training and test tips at: https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix/blob/master/docs/tips.md
-See frequently asked questions at: https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix/blob/master/docs/qa.md
+See training and test tips at: https://github.com/junyanz/pytorch-CycleGANPlusPlus/blob/master/docs/tips.md
+See frequently asked questions at: https://github.com/junyanz/pytorch-CycleGANPlusPlus/blob/master/docs/qa.md
 """
 import time
 from options.train_options import TrainOptions
@@ -35,8 +35,6 @@ if __name__ == '__main__':
     visualizer = Visualizer(opt)   # create a visualizer that display/save images and plots
     total_iters = 0                # the total number of training iterations
 
-    qq = []
-    ww = []
     for epoch in range(opt.epoch_count, opt.n_epochs + opt.n_epochs_decay + 1):    # outer loop for different epochs; we save the model by <epoch_count>, <epoch_count>+<save_latest_freq>
         epoch_start_time = time.time()  # timer for entire epoch
         iter_data_time = time.time()    # timer for data loading per iteration
@@ -76,36 +74,4 @@ if __name__ == '__main__':
             model.save_networks('latest')
             model.save_networks(epoch)
 
-        '''
-        scoreA, scoreB = model.evaluation(opt)
-        qq += [scoreA]
-        ww += [scoreB]
-        print(qq)
-        print()
-        print(ww)
-        with open("qq.txt", "w") as output:
-            output.write(str(qq))
-        with open("ww.txt", "w") as output:
-            output.write(str(ww))
-        '''
-
         print('End of epoch %d / %d \t Time Taken: %d sec' % (epoch, opt.n_epochs + opt.n_epochs_decay, time.time() - epoch_start_time))
-
-    
-    '''
-    import matplotlib.pyplot as plt
-
-    img = plt.plot(qq)
-    plt.legend(['clean-fid'])
-    plt.title("CycleGAN-ParameterSharing Evaluation")
-    plt.ylabel('score')
-    plt.xlabel('epoch')
-    plt.savefig('horse.png')
-
-    img = plt.plot(ww)
-    plt.legend(['clean-fid'])
-    plt.title("CycleGAN-ParameterSharing Evaluation")
-    plt.ylabel('score')
-    plt.xlabel('epoch')
-    plt.savefig('zebra.png')
-    '''

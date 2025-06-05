@@ -23,8 +23,8 @@ Example (You need to train models first or download pre-trained models from our 
         python test.py --dataroot ./datasets/facades --name facades_pix2pix --model pix2pix --direction BtoA
 
 See options/base_options.py and options/test_options.py for more test options.
-See training and test tips at: https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix/blob/master/docs/tips.md
-See frequently asked questions at: https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix/blob/master/docs/qa.md
+See training and test tips at: https://github.com/junyanz/pytorch-CycleGANPlusPlus/blob/master/docs/tips.md
+See frequently asked questions at: https://github.com/junyanz/pytorch-CycleGANPlusPlus/blob/master/docs/qa.md
 """
 import os
 from options.test_options import TestOptions
@@ -54,7 +54,7 @@ if __name__ == '__main__':
     # initialize logger
     if opt.use_wandb:
         wandb_run = wandb.init(project=opt.wandb_project_name, name=opt.name, config=opt) if not wandb.run else wandb.run
-        wandb_run._label(repo='CycleGAN-and-pix2pix')
+        wandb_run._label(repo='CycleGANPlusPlus')
 
     # create a website
     web_dir = os.path.join(opt.results_dir, opt.name, '{}_{}'.format(opt.phase, opt.epoch))  # define the website directory

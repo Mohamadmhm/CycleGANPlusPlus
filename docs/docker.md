@@ -1,4 +1,4 @@
-# Docker image with pytorch-CycleGAN-and-pix2pix
+# Docker image with pytorch-CycleGANPlusPlus
 
 We provide both Dockerfile and pre-built Docker container that can run this code repo.
 
@@ -12,18 +12,18 @@ We provide both Dockerfile and pre-built Docker container that can run this code
 - Pull the pre-built docker file
 
 ```bash
-docker pull taesungp/pytorch-cyclegan-and-pix2pix
+docker pull taesungp/pytorch-CycleGANPlusPlus
 ```
 
 - Start an interactive docker session. `-p 8097:8097` option is needed if you want to run `visdom` server on the Docker container.
 
 ```bash
-nvidia-docker run -it -p 8097:8097  taesungp/pytorch-cyclegan-and-pix2pix
+nvidia-docker run -it -p 8097:8097  taesungp/pytorch-CycleGANPlusPlus
 ```
 
 - Now you are in the Docker environment. Go to our code repo and start running things.
 ```bash
-cd /workspace/pytorch-CycleGAN-and-pix2pix
+cd /workspace/pytorch-CycleGANPlusPlus
 bash datasets/download_pix2pix_dataset.sh facades
 python -m visdom.server &
 bash scripts/train_pix2pix.sh
