@@ -26,8 +26,6 @@ cd pytorch-CycleGANPlusPlus
 - Install [PyTorch](http://pytorch.org) and 0.4+ and other dependencies (e.g., torchvision, [visdom](https://github.com/facebookresearch/visdom) and [dominate](https://github.com/Knio/dominate)).
   - For pip users, please type the command `pip install -r requirements.txt`.
   - For Conda users, you can create a new Conda environment using `conda env create -f environment.yml`.
-  - For Docker users, we provide the pre-built Docker image and Dockerfile. Please refer to our [Docker](docs/docker.md) page.
-  - For Repl users, please click [![Run on Repl.it](https://repl.it/badge/github/junyanz/pytorch-CycleGANPlusPlus)](https://repl.it/github/junyanz/pytorch-CycleGANPlusPlus).
 
 ### CycleGAN train/test
 - Download a CycleGAN dataset (e.g. horse2zebra):
@@ -49,18 +47,6 @@ python test.py --dataroot ./datasets/horse2zebra/ --name horse2zebra --model cyc
 ```
 - The test results will be saved to a html file here: `./results/horse2zebra/latest_test/index.html`.
 
-### Apply a pre-trained model (CycleGAN)
-- You can download a pretrained model (e.g. horse2zebra) with the following script:
-```bash
-bash ./scripts/download_cyclegan_model.sh horse2zebra
-```
-- The pretrained model is saved at `./checkpoints/{name}_pretrained/latest_net_G.pth`. Check [here](https://github.com/junyanz/pytorch-CycleGANPlusPlus/blob/master/scripts/download_cyclegan_model.sh#L3) for all the available CycleGAN models.
-- To test the model, you also need to download the  horse2zebra dataset:
-```bash
-bash ./datasets/download_cyclegan_dataset.sh horse2zebra
-```
-
-- Then generate the results using
 ```bash
 python test.py --dataroot datasets/horse2zebra/testA --name horse2zebra_pretrained --model cycle_gan_plusplus --no_dropout
 ```
