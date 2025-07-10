@@ -1,9 +1,5 @@
 
-<img src='imgs/horse2zebra.gif' align="right" width=384>
-
-<br><br><br>
-
-# CycleGAN in PyTorch
+# CycleGAN++ in PyTorch
 
 This repository contains a PyTorch implementation for unpaired image-to-image translation using the CycleGAN++ model.
 
@@ -12,11 +8,6 @@ This implementation builds upon the original CycleGAN work.
 **CycleGAN: [Paper](https://arxiv.org/pdf/1703.10593.pdf)**
 
 <img src="https://junyanz.github.io/CycleGAN/images/teaser_high_res.jpg" width="800"/>
-
-If you use this code for your research, please cite:
-
-Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks.<br>
-[Jun-Yan Zhu](https://www.cs.cmu.edu/~junyanz/)\*,  [Taesung Park](https://taesung.me/)\*, [Phillip Isola](https://people.eecs.berkeley.edu/~isola/), [Alexei A. Efros](https://people.eecs.berkeley.edu/~efros). In ICCV 2017. (* equal contributions) [[Bibtex]](https://junyanz.github.io/CycleGAN/CycleGAN.txt)
 
 ## Prerequisites
 - Linux or macOS
@@ -80,10 +71,4 @@ python test.py --dataroot datasets/horse2zebra/testA --name horse2zebra_pretrain
 ## Citation
 If you use this code for your research, please cite the original CycleGAN paper:
 ```
-@inproceedings{CycleGAN2017,
-  title={Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks},
-  author={Zhu, Jun-Yan and Park, Taesung and Isola, Phillip and Efros, Alexei A},
-  booktitle={Computer Vision (ICCV), 2017 IEEE International Conference on},
-  year={2017}
-}
 ```
