@@ -3,7 +3,7 @@
 
 This repository contains a PyTorch implementation for unpaired image-to-image translation using the CycleGAN++ model.
 <br>
-<img src="./images/cyclegan_plus_plus.jpg" width="800"/>
+<img src="./imgs/cyclegan_plus_plus.jpg" width="800"/>
 <br><br>
 This implementation builds upon the original CycleGAN [Paper](https://arxiv.org/pdf/1703.10593.pdf) work.
 
@@ -21,7 +21,7 @@ git clone https://github.com/Mohamadmhm/CycleGANPlusPlus.git
 cd pytorch-CycleGANPlusPlus
 ```
 
-- Install [PyTorch](http://pytorch.org) and 0.4+ and other dependencies (e.g., torchvision, [visdom](https://github.com/facebookresearch/visdom) and [dominate](https://github.com/Knio/dominate)).
+- Install [PyTorch](http://pytorch.org) and `>=1.4` and other dependencies (e.g., torchvision, [visdom](https://github.com/facebookresearch/visdom) and [dominate](https://github.com/Knio/dominate)).
   - For pip users, please type the command `pip install -r requirements.txt`.
   - For Conda users, you can create a new Conda environment using `conda env create -f environment.yml`.
 
