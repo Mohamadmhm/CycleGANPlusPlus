@@ -36,13 +36,11 @@ bash ./datasets/download_cyclegan_dataset.sh horse2zebra
 - To log training progress and test images to W&B dashboard, set the `--use_wandb` flag with train and test script
 - Train a model:
 ```bash
-#!./scripts/train_cyclegan.sh
 python train.py --dataroot ./datasets/horse2zebra/ --name horse2zebra --model cycle_gan_plusplus
 ```
 To see more intermediate results, check out `./checkpoints/horse2zebra/web/index.html`.
 - Test the model:
 ```bash
-#!./scripts/test_cyclegan.sh
 python test.py --dataroot ./datasets/horse2zebra/ --name horse2zebra --model cycle_gan_plusplus
 ```
 - The test results will be saved to a html file here: `./results/horse2zebra/latest_test/index.html`.
