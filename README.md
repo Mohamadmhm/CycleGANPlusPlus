@@ -19,7 +19,7 @@ This implementation builds upon the original CycleGAN work.
 
 - Clone this repo:
 ```bash
-git clone https://github.com/junyanz/pytorch-CycleGANPlusPlus
+git clone https://github.com/Mohamadmhm/CycleGANPlusPlus.git
 cd pytorch-CycleGANPlusPlus
 ```
 
